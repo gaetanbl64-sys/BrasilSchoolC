@@ -1,39 +1,37 @@
 #include <iostream>
-#include <string>
+#include <cstdint>
 
-//________________________________________________________
-class DisplayMulti{
-    public:
-        virtual ~DisplayMulti() = default;
-        virtual void render(std::string) = 0;
+template <typename T>
+class DisplayMulti {
+public:
+    virtual ~DisplayMulti() = default;
+    virtual void render(T data) = 0;
 };
 
-
-//________________________________________________________
-class DisplayPC : public DisplayMulti{
-    public:  //En C++, si une classe ne possède aucun attribut (aucune donnée membre) à initialiser, 
-        void render (std::string texte) override{ //le compilateur génère automatiquement un constructeur par défaut implicite (équivalent à ConsoleDisplay() {}).
-            std::cout << texte << std::endl;
-        }
+class DisplayPC : public DisplayMulti<const char*> {
+public:
+    void render(const char* texte) override {
+        std::cout << texte << std::endl;
+    }
 };
 
+class DisplayLEON : public DisplayMulti<int> {
+private:
+    // Adresses physiques des registres GPIO en constexpr
+    static constexpr std::uintptr_t ADDR_DATA      = 0x80000a00;
+    static constexpr std::uintptr_t ADDR_OUTPUT    = 0x80000a04;
+    static constexpr std::uintptr_t ADDR_DIRECTION = 0x80000a08;
 
-//________________________________________________________
-class Leon3Display : public DisplayInterface {
-    private:
-        // Pointeur volatile : empêche le compilateur d'optimiser/supprimer les accès mémoire
-        volatile unsigned int *output = (volatile unsigned int *)0x80000a04; //vrb qui va changer cst pour envoyer des consignes aux diff output (aux diff led)
-        volatile unsigned int *data = (volatile unsigned int *)0x80000a00; //dans quel endroit de la memoire envoyer les data recus
-        volatile unsigned int *direction = (volatile unsigned int *)0x80000a08; //Définir le mode des broches
-    public:
-        void render(int seconde) override{
-            // Enable all Outputs
-            *direction = 0xffffffff;
+    // Conversion en pointeurs MMIO volatiles
+    volatile unsigned int* const data      = reinterpret_cast<volatile unsigned int*>(ADDR_DATA);
+    volatile unsigned int* const output    = reinterpret_cast<volatile unsigned int*>(ADDR_OUTPUT);
+    volatile unsigned int* const direction = reinterpret_cast<volatile unsigned int*>(ADDR_DIRECTION);
 
-            // Assign value to output registers escreve os secondes sur les LEDs
-            *output = seconde;
-
-            // Realiza a leitura dos valores indicados nos pinos de entrada (Switches e Buttons)
-            std::cout << "Current value of gpio lines: 0x" << *data << std::endl;
-        }
+public:
+    void render(int seconde) override {
+        *direction = 0xFFFFFFFF;
+        *output = seconde;
+        std::cout << "Current value of gpio lines: 0x" 
+                  << std::hex << *data << std::dec << std::endl;
+    }
 };
