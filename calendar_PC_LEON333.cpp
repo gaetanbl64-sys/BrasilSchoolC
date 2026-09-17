@@ -5,9 +5,10 @@
 
 #include <iostream>
 #include <string>
-#include <thread>
-#include <chrono>
+//#include <thread>
+//#include <chrono>
 #include "calendarDisplay.h"
+//#include "leds.h"
 
 static constexpr int NBR_DAY_PER_MONTH[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; //constexpr : Indique au compilateur de stocker cette valeur directement à la compilation
 
@@ -85,6 +86,14 @@ class ClockCalendar: public Clock, public Calendar{ //sans "public" getTime et g
 };
 
 
+//______________________________________________________
+void delay(clock_t time) {
+	clock_t start_time = clock();
+	clock_t end_time = time + start_time;
+	while (clock() != end_time);
+}
+
+
 //________________________________________________________
 int main(){
     //Hour heureJ(18, 4, 5); //Day jourJ(8, 9, 2026); //Calendar now(heureJ, jourJ); // Le '&' ici est l'opérateur "Adresse-de". // '&heureJ' produit un POINTEUR (Hour*), pas une référence."""
@@ -94,9 +103,13 @@ int main(){
         if (now.advance()) {
             display.render(now.getDay());
         }
-        display.render(now.getTime());
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        display.render(now.sec());
+        //std::this_thread::sleep_for(std::chrono::seconds(1));
+        delay(1000); //ou std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     return 0;
 };
+
+
+
 

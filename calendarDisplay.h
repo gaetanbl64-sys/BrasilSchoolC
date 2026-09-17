@@ -1,9 +1,10 @@
 #include <iostream>
 #include <string>
-#include <thread>
-#include <chrono>
+
+//#include "Oled.h"
 
 
+//________________________________________________________
 class DisplayMulti{
     public:
         virtual ~DisplayMulti() = default;
@@ -21,19 +22,21 @@ class DisplayPC : public DisplayMulti{
 
 
 //________________________________________________________
-// class Leon3Display : public DisplayInterface {
-//     private:
-//         // Pointeur volatile : empêche le compilateur d'optimiser/supprimer les accès mémoire
-//         volatile uint32_t* gpioDataReg;
-//     public:
-//         Leon3Display() {
-//             gpioDataReg = reinterpret_cast<volatile uint32_t*>(LEON3_GPIO_BASE + GPIO_DATA_OFFSET);
-//         }
-//         void render(const ClockCalendar& cc) override {
-//             // 1. Affichage binaire des secondes sur les 8 LEDs de la carte Atlys
-//             uint32_t ledsData = static_cast<uint32_t>(cc.getSec());
-//             *gpioDataReg = ledsData; // Écriture directe dans le registre matériel
-//             // 2. Si un écran OLED/UART est configuré, on envoie les registres texte
-//             // (Exemple : ecrire_oled_chaine(cc.getHour(), cc.getMin(), cc.getSec()));
-//         }
-// };
+class Leon3Display : public DisplayInterface {
+    private:
+        // Pointeur volatile : empêche le compilateur d'optimiser/supprimer les accès mémoire
+        volatile unsigned int *output = (volatile unsigned int *)0x80000a04; //vrb qui va changer cst pour envoyer des consignes aux diff output (aux diff led)
+        volatile unsigned int *data = (volatile unsigned int *)0x80000a00; //dans quel endroit de la memoire envoyer les data recus
+        volatile unsigned int *direction = (volatile unsigned int *)0x80000a08; //Définir le mode des broches
+    public:
+        void render(int seconde) override{
+            // Enable all Outputs
+            *direction = 0xffffffff;
+
+            // Assign value to output registers escreve os secondes sur les LEDs
+            *output = seconde;
+
+            // Realiza a leitura dos valores indicados nos pinos de entrada (Switches e Buttons)
+            std::cout << "Current value of gpio lines: 0x" << *data << std::endl;
+        }
+};

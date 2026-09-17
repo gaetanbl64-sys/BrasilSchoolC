@@ -1,0 +1,6 @@
+#include <iostream>
+
+int main(void){
+	std::cout << "Hello from LEON3!!" << std::endl;
+	return 0;
+}
