@@ -1,9 +1,6 @@
 #include <iostream>
 #include <string>
 
-//#include "Oled.h"
-
-
 //________________________________________________________
 class DisplayMulti{
     public:
